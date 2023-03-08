@@ -77,6 +77,24 @@ void new_process(int proc_num, int page_count)
     }
 }
 
+
+void kill_process(int proc_num)
+{
+    int page_table = get_page_table(proc_num);
+
+    for (int i = 0; i < PAGE_COUNT; i++) {
+        int addr = get_address(page_table, i);
+
+        int page = mem[addr];
+
+        if (page != 0) {
+            mem[page]= 0;
+        }
+    }
+
+    mem[page_table] = 0;
+}
+
 //
 // Print the free page map
 //
@@ -146,6 +164,9 @@ int main(int argc, char *argv[])
             int proc_num = atoi(argv[++i]);
             int page_num = atoi(argv[++i]);
             new_process(proc_num, page_num);
+        } else if (strcmp(argv[i], "kp") == 0) {
+            int proc_num = atoi(argv[++i]);
+            kill_process(proc_num);
         }
 
         // TODO: more command line arguments
