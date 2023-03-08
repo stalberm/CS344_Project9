@@ -95,6 +95,30 @@ void kill_process(int proc_num)
     mem[page_table] = 0;
 }
 
+int get_physical_address(int proc_num, int virtual_address) {
+    int virtual_page = virtual_address >> 8;
+    int offset = virtual_address & 255;
+    int page_table = get_page_table(proc_num);
+    int address = page_table * PAGE_SIZE + virtual_page;
+    int phys_page = mem[address];
+    int phys_addr = get_address(phys_page, offset);
+    return phys_addr;
+}
+
+void store_value(int proc_num, int virt_addr, int value) {
+    int phys_addr = get_physical_address(proc_num, virt_addr);
+    mem[phys_addr] = value;
+    printf("Store proc %d: %d => %d, value=%d\n",
+        proc_num, virt_addr, phys_addr, value);
+}
+
+void load_value(int proc_num, int virt_addr) {
+    int phys_addr = get_physical_address(proc_num, virt_addr);
+    int value = mem[phys_addr];
+    printf("Load proc %d: %d => %d, value=%d\n",
+        proc_num, virt_addr, phys_addr, value);
+}
+
 //
 // Print the free page map
 //
@@ -151,7 +175,6 @@ int main(int argc, char *argv[])
     }
     
     initialize_mem();
-
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "pfm") == 0) {
             print_page_free_map();
@@ -167,8 +190,15 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "kp") == 0) {
             int proc_num = atoi(argv[++i]);
             kill_process(proc_num);
+        } else if (strcmp(argv[i], "sb") == 0) {
+            int proc_num = atoi(argv[++i]);
+            int virtual_address = atoi(argv[++i]);
+            int value = atoi(argv[++i]);
+            store_value(proc_num, virtual_address, value);
+        } else if (strcmp(argv[i], "lb") == 0) {
+            int proc_num = atoi(argv[++i]);
+            int virtual_address = atoi(argv[++i]);
+            load_value(proc_num, virtual_address);
         }
-
-        // TODO: more command line arguments
     }
 }
